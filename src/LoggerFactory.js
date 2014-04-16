@@ -77,7 +77,7 @@ LoggerFactory.prototype.print = function(target, category, label, content) {
   prefix.push('');
 
   if (typeof content === 'string') {
-    target.call(console, prefix.join(' | ') + content);
+    target.call(console, prefix.join(' | ') + "\n" + content);
   } else {
     target.call(console, content);
   }
