@@ -801,6 +801,9 @@ UA.prototype.loadConfig = function(configuration) {
       stun_servers: ['stun:stun.l.google.com:19302'],
       turn_servers: [],
 
+      // Ice half/full trickle switch
+      is_ice_full_trickle: false,
+
       // Logging parameters
       trace_sip: false,
 
@@ -994,6 +997,7 @@ UA.configuration_skeleton = (function() {
       "trace_sip",
       "turn_servers",
       "use_preloaded_route",
+      "is_ice_full_trickle",
 
       // Post-configuration generated parameters
       "via_core_value",
@@ -1162,6 +1166,12 @@ UA.configuration_check = {
         return;
       } else {
         return instance_id;
+      }
+    },
+
+    is_ice_full_trickle: function(is_ice_full_trickle) {
+      if (typeof is_ice_full_trickle === 'boolean') {
+        return is_ice_full_trickle;
       }
     },
 

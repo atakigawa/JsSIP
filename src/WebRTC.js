@@ -40,6 +40,17 @@ else if (window.RTCSessionDescription) {
   WebRTC.RTCSessionDescription = window.RTCSessionDescription;
 }
 
+// RTCIceCandidate
+if (window.webkitRTCIceCandidate) {
+  WebRTC.RTCIceCandidate = window.webkitRTCIceCandidate;
+}
+else if (window.mozRTCIceCandidate) {
+  WebRTC.RTCIceCandidate = window.mozRTCIceCandidate;
+}
+else if (window.RTCIceCandidate) {
+  WebRTC.RTCIceCandidate = window.RTCIceCandidate;
+}
+
 // New syntax for getting streams in Chrome M26.
 if (WebRTC.RTCPeerConnection && WebRTC.RTCPeerConnection.prototype) {
   if (!WebRTC.RTCPeerConnection.prototype.getLocalStreams) {

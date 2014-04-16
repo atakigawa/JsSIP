@@ -12,6 +12,7 @@
 var Request         = @@include('../src/RTCSession/Request.js')
 var RTCMediaHandler = @@include('../src/RTCSession/RTCMediaHandler.js')
 var DTMF            = @@include('../src/RTCSession/DTMF.js')
+var ICECandidate    = @@include('../src/RTCSession/ICECandidate.js')
 
 var RTCSession,
   C = {
@@ -91,16 +92,16 @@ RTCSession = function(ua) {
       return false;
     },
     
-    shift: function() {
-      return this.actions.shift();
+    push: function(name, options) {
+      var obj = {name: name};
+      if (options) {
+        for (var prop in options) {
+          obj[prop] = options[prop];
+        }
+      }
+      this.actions.push(obj);
     },
-    
-    push: function(name) {
-      this.actions.push({
-        name: name
-      });
-    },
-    
+
     pop: function(name) {
       var 
         idx = 0,
@@ -111,7 +112,37 @@ RTCSession = function(ua) {
           this.actions.splice(idx,1);
         }
       }
+    },
+
+    enqueue: function(name, options) {
+      this.push(name, options);
+    },
+
+    dequeue: function(label) {
+      var
+        idx = 0,
+        length = this.actions.length;
+
+      var ret = [];
+      var remainder = [];
+      for (idx; idx < length; idx++) {
+        var action = this.actions[idx];
+        //string
+        if (typeof label === 'string' && action.name === label) {
+          ret.push(action);
+        }
+        //regex
+        else if (label.test && label.test(action.name)) {
+          ret.push(action);
+        }
+        else {
+          remainder.push(action);
+        }
+      }
+      this.actions = remainder;
+      return ret;
     }
+
   };
   
   // Custom session empty object for high level use
@@ -724,6 +755,76 @@ RTCSession.prototype.isOnHold = function() {
   };
 };
 
+/**
+ * sendIceCandidate
+ */
+RTCSession.prototype.sendIceCandidate = function(candidate) {
+  var
+    isFullTrickle = this.ua.configuration.is_ice_full_trickle,
+    isIncoming =  this.direction === 'incoming',
+    getMsgBodyObj = function(candidate) {
+      var extraHeaders = [];
+      extraHeaders.push('Info-Package: trickle-ice');
+      extraHeaders.push('Content-Type: application/sdp');
+      extraHeaders.push('Content-Disposition: Info-Package');
+
+      var bodyArr = [];
+      bodyArr.push('a=mid:' + candidate.sdpMid);
+      bodyArr.push('a=m-line-id:' + candidate.sdpMLineIndex);
+      bodyArr.push(candidate.candidate);
+
+      return {
+        extraHeaders: extraHeaders,
+        body: bodyArr.join("\r\n")
+      };
+    };
+
+  if (isFullTrickle) {
+    if (isIncoming) {
+      this.sendRequest(JsSIP.C.INFO, getMsgBodyObj(candidate));
+    }
+    else {
+      //put it in the queue since we're not yet ready to send next messages.
+      if (!this.dialog) {
+        (function(rtcSession, msgBodyObj) {
+          rtcSession.pending_actions.enqueue('sendIceCandidate', {
+            func: function(dialog) {
+              var dummySessionObj = {
+                owner: {status: C.STATUS_TERMINATED},
+                onRequestTimeout: function(){},
+                onTransportError: function(){},
+                onDialogError: function(){},
+                receiveResponse: function(){}
+              };
+              dialog.sendRequest(dummySessionObj, JsSIP.C.INFO, msgBodyObj);
+            }
+          });
+        })(this, getMsgBodyObj(candidate));
+      }
+      else {
+        this.sendRequest(JsSIP.C.INFO, getMsgBodyObj(candidate));
+      }
+    }
+  }
+  else {
+    if (isIncoming) {
+      if (this.remoteSupportsTrickleIce()) {
+        this.sendRequest(JsSIP.C.INFO, getMsgBodyObj(candidate));
+      }
+    }
+    else {
+      //for outgoing calls,
+      //all candidates will be put inside the INVITE request.
+    }
+  }
+};
+
+/**
+ * remoteSupportsTrickleIce
+ */
+RTCSession.prototype.remoteSupportsTrickleIce = function() {
+  return this.request.body && this.request.body.match("a=ice-options:trickle");
+};
 
 /**
  * Session Timers
@@ -1043,15 +1144,21 @@ RTCSession.prototype.close = function() {
   delete this.ua.sessions[this.id];
 };
 
+RTCSession.prototype.getDialogIdForMsg = function(message, type) {
+  var
+    local_tag = (type === 'UAS') ? message.to_tag : message.from_tag,
+    remote_tag = (type === 'UAS') ? message.from_tag : message.to_tag,
+    id = message.call_id + local_tag + remote_tag;
+  return id;
+};
+
 /**
  * Dialog Management
  * @private
  */
 RTCSession.prototype.createDialog = function(message, type, early) {
   var dialog, early_dialog,
-    local_tag = (type === 'UAS') ? message.to_tag : message.from_tag,
-    remote_tag = (type === 'UAS') ? message.from_tag : message.to_tag,
-    id = message.call_id + local_tag + remote_tag;
+    id = this.getDialogIdForMsg(message, type);
 
     early_dialog = this.earlyDialogs[id];
 
@@ -1221,8 +1328,23 @@ RTCSession.prototype.receiveRequest = function(request) {
           contentType = request.getHeader('content-type');
           if (contentType && (contentType.match(/^application\/dtmf-relay/i))) {
             new DTMF(this).init_incoming(request);
+            return;
           }
         }
+
+        if (this.status !== C.STATUS_TERMINATED) {
+          contentType = request.getHeader('content-type') || "";
+          var infoPackage = request.getHeader('info-package') || "";
+
+          if (contentType.match(/^application\/sdp/i) &&
+              infoPackage.match(/^trickle-ice/i)) {
+            new ICECandidate(this).handleIncoming(request);
+            return;
+          }
+        }
+        break;
+      default:
+        break;
     }
   }
 };
@@ -1284,6 +1406,10 @@ RTCSession.prototype.sendInitialRequest = function(mediaConstraints, RTCOfferCon
    if (self.isCanceled || self.status === C.STATUS_TERMINATED) {
      return;
    }
+
+   //trickle ice
+   //see http://tools.ietf.org/html/draft-ietf-mmusic-trickle-ice-01#section-5.1
+   offer = offer.replace(/(a=ice-options:)[\w-]+\b/ig, "$1trickle");
 
    self.request.body = offer;
    self.status = C.STATUS_INVITE_SENT;
@@ -1452,6 +1578,7 @@ RTCSession.prototype.receiveInviteResponse = function(response) {
       if (!response.body) {
         session.status = C.STATUS_1XX_RECEIVED;
         session.progress('remote', response);
+        session.dispatchSendIceCandidateQueue(response);
         break;
       }
       
@@ -1465,6 +1592,7 @@ RTCSession.prototype.receiveInviteResponse = function(response) {
         function() {
           session.status = C.STATUS_1XX_RECEIVED;
           session.progress('remote', response);
+          session.dispatchSendIceCandidateQueue(response);
         },
         /*
         * OnFailure.
@@ -1619,6 +1747,21 @@ RTCSession.prototype.toogleMuteVideo = function(mute) {
     for (trackIdx in tracks) {
       tracks[trackIdx].enabled = !mute;
     }
+  }
+};
+
+/**
+* @private
+*/
+RTCSession.prototype.dispatchSendIceCandidateQueue = function(triggerMsg) {
+  var dialogId = this.getDialogIdForMsg(triggerMsg);
+  var correspondingDialog = this.dialog || this.earlyDialogs[dialogId];
+  if (!correspondingDialog) { return; }
+
+  var actions = this.pending_actions.dequeue('sendIceCandidate');
+  var cnt = actions.length;
+  for (var i = 0; i < cnt; i++) {
+    actions[i].func(correspondingDialog);
   }
 };
 
@@ -1819,12 +1962,14 @@ RTCSession.prototype.onunmute = function(options) {
  * @private
  */
 RTCSession.prototype.onReadyToReinvite = function() {
-  var action = (this.pending_actions.length() > 0)? this.pending_actions.shift() : null;
-  
-  if (!action) {
+  var actions = (this.pending_actions.length() > 0) ?
+      this.pending_actions.dequeue(/hold|unhold/) : null;
+
+  if (!actions) {
     return;
   }
-  
+
+  var action = actions[0];
   if (action.name === 'hold') {
     this.hold();
   } else if (action.name === 'unhold') {

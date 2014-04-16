@@ -27,10 +27,16 @@ RTCMediaHandler.prototype = {
   },
   
   createOffer: function(onSuccess, onFailure, constraints) {
-    var self = this;
+    var
+      self = this,
+      isFullTrickle = this.session.ua.configuration.is_ice_full_trickle;
 
     function onSetLocalDescriptionSuccess() {
-      if (self.peerConnection.iceGatheringState === 'complete' && self.peerConnection.iceConnectionState === 'connected') {
+      if (self.peerConnection.iceGatheringState === 'complete' &&
+          self.peerConnection.iceConnectionState === 'connected') {
+        self.ready = true;
+        onSuccess(self.peerConnection.localDescription.sdp);
+      } else if (isFullTrickle) {
         self.ready = true;
         onSuccess(self.peerConnection.localDescription.sdp);
       } else {
@@ -66,10 +72,16 @@ RTCMediaHandler.prototype = {
   },
 
   createAnswer: function(onSuccess, onFailure, constraints) {
-    var self = this;
+    var
+      self = this,
+      remoteSupportsTrickleIce = this.session.remoteSupportsTrickleIce();
 
     function onSetLocalDescriptionSuccess() {
-      if (self.peerConnection.iceGatheringState === 'complete' && self.peerConnection.iceConnectionState === 'connected') {
+      if (self.peerConnection.iceGatheringState === 'complete' &&
+          self.peerConnection.iceConnectionState === 'connected') {
+        self.ready = true;
+        onSuccess(self.peerConnection.localDescription.sdp);
+      } else if (remoteSupportsTrickleIce) {
         self.ready = true;
         onSuccess(self.peerConnection.localDescription.sdp);
       } else {
@@ -131,6 +143,24 @@ RTCMediaHandler.prototype = {
     onSuccess();
   },
 
+  /* send locally harvested candidates to remote */
+  onIceCandidate: function(event) {
+    if (!event.candidate) {
+      return;
+    }
+
+    this.session.sendIceCandidate(event.candidate);
+  },
+
+  /* set candidates sent from remote to local */
+  addIceCandidate: function(iceCandidate, onSuccess, onError) {
+    this.peerConnection.addIceCandidate(
+      iceCandidate,
+      onSuccess,
+      onError
+    );
+  },
+
   /**
   * peerConnection creation.
   * @param {Function} onSuccess Fired when there are no more ICE candidates
@@ -185,8 +215,9 @@ RTCMediaHandler.prototype = {
     this.peerConnection.onicecandidate = function(e) {
       if (e.candidate) {
         self.logger.log('ICE candidate received: '+ e.candidate.candidate);
+        self.onIceCandidate(e);
       } else if (self.onIceCompleted !== undefined) {
-        self.onIceCompleted();
+        self.onIceCompleted(e);
       }
     };
 
