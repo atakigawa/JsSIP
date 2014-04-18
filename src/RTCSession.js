@@ -584,13 +584,13 @@ RTCSession.prototype.mute = function(options) {
   if (this.audioMuted === false && options.audio) {
     audioMuted = true;
     this.audioMuted = true;
-    this.toogleMuteAudio(true);
+    this.toggleMuteAudio(true);
   }
   
   if (this.videoMuted === false && options.video) {
     videoMuted = true;
     this.videoMuted = true;
-    this.toogleMuteVideo(true);
+    this.toggleMuteVideo(true);
   }
   
   if (audioMuted === true || videoMuted === true) {
@@ -616,7 +616,7 @@ RTCSession.prototype.unmute = function(options) {
     this.audioMuted = false;
     
     if (this.local_hold === false) {
-      this.toogleMuteAudio(false);
+      this.toggleMuteAudio(false);
     }
   }
   
@@ -625,7 +625,7 @@ RTCSession.prototype.unmute = function(options) {
     this.videoMuted = false;
     
     if (this.local_hold === false) {
-      this.toogleMuteVideo(false);
+      this.toggleMuteVideo(false);
     }
   }
   
@@ -656,8 +656,8 @@ RTCSession.prototype.hold = function() {
     throw new JsSIP.Exceptions.InvalidStateError(this.status);
   }
   
-  this.toogleMuteAudio(true);
-  this.toogleMuteVideo(true);
+  this.toggleMuteAudio(true);
+  this.toggleMuteVideo(true);
   
   if (!this.isReadyToReinvite()) {
     /* If there is a pending 'unhold' action, cancel it and don't queue this one
@@ -713,11 +713,11 @@ RTCSession.prototype.unhold = function() {
   }
   
   if (!this.audioMuted) {
-    this.toogleMuteAudio(false);
+    this.toggleMuteAudio(false);
   }
   
   if (!this.videoMuted) {
-    this.toogleMuteVideo(false);
+    this.toggleMuteVideo(false);
   }
   
   if (!this.isReadyToReinvite()) {
@@ -1723,7 +1723,7 @@ RTCSession.prototype.acceptAndTerminate = function(response, status_code, reason
 /*
  * @private
  */
-RTCSession.prototype.toogleMuteAudio = function(mute) {
+RTCSession.prototype.toggleMuteAudio = function(mute) {
   var streamIdx, trackIdx, tracks,
     localStreams = this.getLocalStreams();
     
@@ -1738,7 +1738,7 @@ RTCSession.prototype.toogleMuteAudio = function(mute) {
 /*
  * @private
  */
-RTCSession.prototype.toogleMuteVideo = function(mute) {
+RTCSession.prototype.toggleMuteVideo = function(mute) {
   var streamIdx, trackIdx, tracks,
     localStreams = this.getLocalStreams();
     
