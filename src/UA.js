@@ -950,13 +950,13 @@ UA.prototype.loadConfig = function(configuration) {
     switch(parameter) {
       case 'uri':
       case 'registrar_server':
-        this.logger.log('· ' + parameter + ': ' + settings[parameter]);
+        this.logger.log('  ' + parameter + ': ' + settings[parameter]);
         break;
       case 'password':
-        this.logger.log('· ' + parameter + ': ' + 'NOT SHOWN');
+        this.logger.log('  ' + parameter + ': ' + 'NOT SHOWN');
         break;
       default:
-        this.logger.log('· ' + parameter + ': ' + window.JSON.stringify(settings[parameter]));
+        this.logger.log('  ' + parameter + ': ' + window.JSON.stringify(settings[parameter]));
     }
   }
 
