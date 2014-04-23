@@ -997,11 +997,14 @@ UA.configuration_skeleton = (function() {
       "trace_sip",
       "turn_servers",
       "use_preloaded_route",
-      "is_ice_full_trickle",
 
       // Post-configuration generated parameters
       "via_core_value",
       "via_host"
+    ],
+    rewritableParameters = [
+      "register",
+      "is_ice_full_trickle"
     ];
 
   for(idx in parameters) {
@@ -1013,11 +1016,14 @@ UA.configuration_skeleton = (function() {
     };
   }
 
-  skeleton['register'] = {
-    value: '',
-    writable: true,
-    configurable: false
-  };
+  for(idx in rewritableParameters) {
+    parameter = rewritableParameters[idx];
+    skeleton[parameter] = {
+      value: '',
+      writable: true,
+      configurable: false
+    };
+  }
 
   return skeleton;
 }());
