@@ -306,9 +306,13 @@ RTCSession.prototype.answer = function(options) {
     mediaConstraints = options.mediaConstraints || {'audio':true, 'video':true},
     RTCAnswerConstraints = options.RTCAnswerConstraints || {},
     mediaStream = options.mediaStream || null,
+    mediaStreamProcessFunc = options.mediaStreamProcessFunc || null,
 
     // User media succeeded
     userMediaSucceeded = function(stream) {
+      if (mediaStreamProcessFunc) {
+          stream = mediaStreamProcessFunc(stream);
+      }
       self.rtcMediaHandler.addStream(
         stream,
         streamAdditionSucceeded,
@@ -1098,7 +1102,12 @@ RTCSession.prototype.connect = function(target, options) {
 
   this.newRTCSession('local', this.request);
 
-  this.sendInitialRequest(mediaConstraints, RTCOfferConstraints, mediaStream);
+  this.sendInitialRequest(
+      mediaConstraints,
+      RTCOfferConstraints,
+      mediaStream,
+      options
+  );
 };
 
 /**
@@ -1354,13 +1363,17 @@ RTCSession.prototype.receiveRequest = function(request) {
  * Initial Request Sender
  * @private
  */
-RTCSession.prototype.sendInitialRequest = function(mediaConstraints, RTCOfferConstraints, mediaStream) {
+RTCSession.prototype.sendInitialRequest = function(mediaConstraints, RTCOfferConstraints, mediaStream, options) {
   var
   self = this,
  request_sender = new JsSIP.RequestSender(self, this.ua),
+ mediaStreamProcessFunc = options.mediaStreamProcessFunc || null,
 
  // User media succeeded
  userMediaSucceeded = function(stream) {
+   if (mediaStreamProcessFunc) {
+       stream = mediaStreamProcessFunc(stream);
+   }
    self.rtcMediaHandler.addStream(
      stream,
      streamAdditionSucceeded,
