@@ -775,7 +775,7 @@ RTCSession.prototype.sendIceCandidate = function(candidate) {
       var bodyArr = [];
       bodyArr.push('a=mid:' + candidate.sdpMid);
       bodyArr.push('a=m-line-id:' + candidate.sdpMLineIndex);
-      bodyArr.push(candidate.candidate);
+      bodyArr.push('a=candidate:' + candidate.candidate.replace(/^(a=)?candidate:/, ""));
 
       return {
         extraHeaders: extraHeaders,
