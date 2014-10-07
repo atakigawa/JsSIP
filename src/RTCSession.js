@@ -1422,7 +1422,44 @@ RTCSession.prototype.sendInitialRequest = function(mediaConstraints, RTCOfferCon
 
    //trickle ice
    //see http://tools.ietf.org/html/draft-ietf-mmusic-trickle-ice-01#section-5.1
-   offer = offer.replace(/(a=ice-options:)[\w-]+\b/ig, "$1trickle");
+   if (!self.ua.configuration.hack_asterisk) {
+     offer = offer.replace(/(a=ice-options:)[\w-]+\b/ig, "$1trickle");
+   }
+
+   //a hack to make it work with asterisk
+   if (self.ua.configuration.hack_asterisk && self.direction === "outgoing") {
+     //make asterisk use DTLS.
+     //see https://github.com/versatica/JsSIP/issues/46
+     if (offer.indexOf("a=fingerprint") !== -1) {
+       offer = offer.replace(/(m=audio \d+) [\w\/]+\b/, "$1 UDP/TLS/RTP/SAVPF");
+     }
+
+     //asterisk spits out STUN error if a candidate with port number zero is sent,
+     //so weed it out.
+     var
+       lines = offer.split("\r\n"),
+       linesConv = [],
+       len = lines.length,
+       i, line, cElems;
+
+     for (i = 0; i < len; i++) {
+       line = lines[i];
+       if (line.indexOf("a=candidate:") !== 0) {
+         linesConv.push(line);
+         continue;
+       }
+       cElems = line.split(" ");
+       if (cElems.length < 6) {
+         linesConv.push(line);
+         continue;
+       }
+       //index 5 is the port field
+       if (parseInt(cElems[5], 10) !== 0) {
+         linesConv.push(line);
+       }
+     }
+     offer = linesConv.join("\r\n");
+   }
 
    self.request.body = offer;
    self.status = C.STATUS_INVITE_SENT;

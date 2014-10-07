@@ -809,7 +809,8 @@ UA.prototype.loadConfig = function(configuration) {
 
       // Hacks
       hack_via_tcp: false,
-      hack_ip_in_contact: false
+      hack_ip_in_contact: false,
+      hack_asterisk: false
     };
 
   // Pre-Configuration
@@ -1004,7 +1005,8 @@ UA.configuration_skeleton = (function() {
     ],
     rewritableParameters = [
       "register",
-      "is_ice_full_trickle"
+      "is_ice_full_trickle",
+      "hack_asterisk"
     ];
 
   for(idx in parameters) {
@@ -1160,6 +1162,12 @@ UA.configuration_check = {
     hack_ip_in_contact: function(hack_ip_in_contact) {
       if (typeof hack_ip_in_contact === 'boolean') {
         return hack_ip_in_contact;
+      }
+    },
+
+    hack_asterisk: function(hack_asterisk) {
+      if (typeof hack_asterisk === 'boolean') {
+        return hack_asterisk;
       }
     },
 

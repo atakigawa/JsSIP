@@ -282,6 +282,30 @@ RTCMediaHandler.prototype = {
   * @param {Function} onFailure
   */
   onMessage: function(type, body, onSuccess, onFailure) {
+    var
+      self = this,
+      isHackAsterisk = self.session.ua.configuration.hack_asterisk,
+      isOutgoing = self.session.direction === "outgoing",
+      localDescription = self.peerConnection.localDescription,
+      aProtoMatch;
+
+    if (isHackAsterisk && isOutgoing) {
+      //revert the quirk back.
+      if (localDescription && body.indexOf("a=fingerprint") !== -1) {
+        aProtoMatch = localDescription.sdp.match(/m=audio \d+ ([\w\/]+)\b/);
+        if (aProtoMatch.length > 1) {
+          body = body.replace(/(m=audio \d+) [\w\/]+\b/, "$1 " + aProtoMatch[1]);
+        }
+      }
+      //do not set pranswer as remote description.
+      //at least chrome doesn't seem to support it so far.
+      //https://code.google.com/p/webrtc/issues/detail?id=3349
+      //https://code.google.com/p/webrtc/issues/detail?id=3530
+      if (type === 'pranswer') {
+        return;
+      }
+    }
+
     this.peerConnection.setRemoteDescription(
       new JsSIP.WebRTC.RTCSessionDescription({type: type, sdp:body}),
       onSuccess,
