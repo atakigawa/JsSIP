@@ -459,8 +459,6 @@ IncomingRequest.prototype.reply = function(code, reason, extraHeaders, body, onS
   } else if (code === 415 ) {
     response += 'Accept: '+ JsSIP.UA.C.ACCEPTED_BODY_TYPES +'\r\n';
   }
-  
-  response += 'Supported: ' +  supported +'\r\n';
 
   response += 'Supported: ' +  supported +'\r\n';
 

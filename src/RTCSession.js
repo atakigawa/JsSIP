@@ -140,7 +140,6 @@ RTCSession = function(ua) {
       this.actions = remainder;
       return ret;
     }
-
   };
 
   // Custom session empty object for high level use
@@ -395,8 +394,6 @@ RTCSession.prototype.answer = function(options) {
   } else if (this.status !== C.STATUS_WAITING_FOR_ANSWER) {
     throw new JsSIP.Exceptions.InvalidStateError(this.status);
   }
-  
-  this.status = C.STATUS_ANSWERED;
 
   this.status = C.STATUS_ANSWERED;
 
@@ -882,7 +879,6 @@ RTCSession.prototype.setInvite2xxTimer = function(request, body) {
     );
   }, timeout);
 };
-
 
 
 /**
@@ -1632,7 +1628,7 @@ RTCSession.prototype.sendInitialRequest = function(mediaConstraints, RTCOfferCon
 
    self.failed('system', null, JsSIP.C.causes.WEBRTC_ERROR);
  };
- 
+
  this.receiveResponse = this.receiveInviteResponse;
 
  if (mediaStream) {
@@ -1955,6 +1951,7 @@ RTCSession.prototype.dispatchSendIceCandidateQueue = function(triggerMsg) {
   var actions, i, cnt,
     dialogId = this.getDialogIdForMsg(triggerMsg),
     correspondingDialog = this.dialog || this.earlyDialogs[dialogId];
+
   if (!correspondingDialog) { return; }
 
   actions = this.pending_actions.dequeue('sendIceCandidate');

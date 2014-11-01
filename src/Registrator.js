@@ -29,8 +29,6 @@ Registrator = function(ua, transport) {
 
   // Contact header
   this.contact = this.ua.contact.toString();
-  
-  this.extraHeaders = [];
 
   // sip.ice media feature tag (RFC 5768)
   this.contact += ';+sip.ice';

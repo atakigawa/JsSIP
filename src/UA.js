@@ -350,17 +350,6 @@ UA.prototype.normalizeTarget = function(target) {
   return JsSIP.Utils.normalizeTarget(target, this.configuration.hostport_params);
 };
 
-/**
- * Normalice a string into a valid SIP request URI
- *
- * @param {String} target
- *
- * @returns {JsSIP.URI|undefined}
- */
-UA.prototype.normalizeTarget = function(target) {
-  return JsSIP.Utils.normalizeTarget(target, this.configuration.hostport_params);
-};
-
 
 //===============================
 //  Private (For internal use)
@@ -545,12 +534,6 @@ UA.prototype.receiveRequest = function(request) {
     return;
   }
 
-  // Check request URI scheme
-  if(request.ruri.scheme === JsSIP.C.SIPS) {
-    request.reply_sl(416);
-    return;
-  }
-
   // Check transaction
   if(JsSIP.Transactions.checkTransaction(this, request)) {
     return;
@@ -600,7 +583,7 @@ UA.prototype.receiveRequest = function(request) {
         // Out of dialog BYE received
         request.reply(481);
         break;
-      case JsSIP.C.CANCEL:
+        case JsSIP.C.CANCEL:
         session = this.findSession(request);
         if(session) {
           session.receiveRequest(request);
@@ -893,12 +876,6 @@ UA.prototype.loadConfig = function(configuration) {
   if (settings.hack_ip_in_contact) {
     settings.via_host = JsSIP.Utils.getRandomTestNetIP();
   }
-  
-  // Set empty Stun Server Set if explicitly passed an empty Array
-  value = configuration.stun_servers;
-  if (value instanceof Array && value.length === 0) {
-    settings.stun_servers = [];
-  }
 
   // Set empty Stun Server Set if explicitly passed an empty Array
   value = configuration.stun_servers;
@@ -969,45 +946,45 @@ UA.prototype.loadConfig = function(configuration) {
  */
 UA.configuration_skeleton = (function() {
   var idx,  parameter,
-    skeleton = {},
-    parameters = [
-      // Internal parameters
-      "jssip_id",
-      "ws_server_max_reconnection",
-      "ws_server_reconnection_timeout",
-      "hostport_params",
+  skeleton = {},
+  parameters = [
+    // Internal parameters
+    "jssip_id",
+    "ws_server_max_reconnection",
+    "ws_server_reconnection_timeout",
+    "hostport_params",
 
-      // Mandatory user configurable parameters
-      "uri",
-      "ws_servers",
+    // Mandatory user configurable parameters
+    "uri",
+    "ws_servers",
 
-      // Optional user configurable parameters
-      "authorization_user",
-      "connection_recovery_max_interval",
-      "connection_recovery_min_interval",
-      "display_name",
-      "hack_via_tcp", // false.
-      "hack_via_ws", // false
-      "hack_ip_in_contact", //false
-      "instance_id",
-      "no_answer_timeout", // 30 seconds.
-      "password",
-      "register_expires", // 600 seconds.
-      "registrar_server",
-      "stun_servers",
-      "trace_sip",
-      "turn_servers",
-      "use_preloaded_route",
+    // Optional user configurable parameters
+    "authorization_user",
+    "connection_recovery_max_interval",
+    "connection_recovery_min_interval",
+    "display_name",
+    "hack_via_tcp", // false.
+    "hack_via_ws", // false
+    "hack_ip_in_contact", //false
+    "instance_id",
+    "no_answer_timeout", // 30 seconds.
+    "password",
+    "register_expires", // 600 seconds.
+    "registrar_server",
+    "stun_servers",
+    "trace_sip",
+    "turn_servers",
+    "use_preloaded_route",
 
-      // Post-configuration generated parameters
-      "via_core_value",
-      "via_host"
-    ],
-    rewritableParameters = [
-      "register",
-      "is_ice_full_trickle",
-      "hack_asterisk"
-    ];
+    // Post-configuration generated parameters
+    "via_core_value",
+    "via_host"
+  ],
+  rewritableParameters = [
+    "register",
+    "is_ice_full_trickle",
+    "hack_asterisk"
+  ];
 
   for(idx in parameters) {
     parameter = parameters[idx];
