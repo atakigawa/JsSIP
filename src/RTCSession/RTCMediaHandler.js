@@ -184,19 +184,15 @@ RTCMediaHandler.prototype = {
       turn_servers = config.turn_servers;
     }
     
-    /* Change 'url' to 'urls' whenever this issue is solved:
-     * https://code.google.com/p/webrtc/issues/detail?id=2096
-     */
-    
     if (stun_servers.length > 0) {
-      servers.push({'url': stun_servers});
+      servers.push({'urls': stun_servers});
     }
     
     length = turn_servers.length;
     for (idx = 0; idx < length; idx++) {
       server = turn_servers[idx];
       servers.push({
-        'url': server.urls,
+        'urls': server.urls,
         'username': server.username,
         'credential': server.credential
       });

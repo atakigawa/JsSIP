@@ -37,6 +37,7 @@ ICECandidate.prototype.handleIncoming = function(request) {
   for (i; i < cnt; i++) {
     lineRaw = lines[i];
     line = lineRaw.split(':');
+    //ipv6 addresses are ignored here.
     if (line.length !== 2) { continue; }
 
     lp = line[0].split('=');
@@ -53,9 +54,10 @@ ICECandidate.prototype.handleIncoming = function(request) {
         iceCandidateObj.sdpMLineIndex = +rp;
     }
     else if (attrName === 'candidate') {
-        iceCandidateObj.candidate = lineRaw; //this is intentional.
+        iceCandidateObj.candidate = lineRaw;
     }
   }
+  if (!iceCandidateObj.candidate) { return; }
 
   iceCandidate = new JsSIP.WebRTC.RTCIceCandidate(iceCandidateObj);
   onAddIceCandidateSuccess = function() {

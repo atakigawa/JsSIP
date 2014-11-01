@@ -39,6 +39,7 @@ Request.prototype.send = function(method, options) {
   if (this.owner.status !== JsSIP.RTCSession.C.STATUS_1XX_RECEIVED &&
     this.owner.status !== JsSIP.RTCSession.C.STATUS_WAITING_FOR_ANSWER &&
     this.owner.status !== JsSIP.RTCSession.C.STATUS_WAITING_FOR_ACK &&
+    this.owner.status !== JsSIP.RTCSession.C.STATUS_ANSWERED &&
     this.owner.status !== JsSIP.RTCSession.C.STATUS_CONFIRMED &&
     this.owner.status !== JsSIP.RTCSession.C.STATUS_TERMINATED) {
     throw new JsSIP.Exceptions.InvalidStateError(this.owner.status);
