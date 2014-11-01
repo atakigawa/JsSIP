@@ -1,24 +1,28 @@
-/*global console: false*/
+var JsSIP = (function() {
+"use strict";
+
 
 /**
- * @name JsSIP
- * @namespace
+ * The main namespace.
+ * @namespace JsSIP
  */
-(function(window) {
+var JsSIP = {};
 
-var JsSIP = (function() {
-  "use strict";
+Object.defineProperties(JsSIP, {
+	/**
+	 * Retrieve the version of JsSIP.
+	 * @memberof JsSIP
+	 * @method
+	 * @returns {String} Version in the form "X.Y.Z"
+	 * @example
+	 * // prints "1.0.0"
+	 * console.log(JsSIP.version)
+	 */
+	version: {
+		get: function(){ return '<%= pkg.version %>'; }
+	}
+});
 
-  var JsSIP = {};
 
-  Object.defineProperties(JsSIP, {
-    version: {
-      get: function(){ return '<%= pkg.version %>'; }
-    },
-    name: {
-      get: function(){ return '<%= pkg.title %>'; }
-    }
-  });
-
-  return JsSIP;
+return JsSIP;
 }());

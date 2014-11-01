@@ -85,5 +85,5 @@ ICECandidate.prototype.handleIncoming = function(request) {
 
 
 ICECandidate.C = C;
-return ICECandidate;
+JsSIP.RTCSession.ICECandidate = ICECandidate;
 }(JsSIP));

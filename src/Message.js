@@ -1,12 +1,3 @@
-/**
- * @fileoverview Message
- */
-
-/**
- * @augments JsSIP
- * @class Class creating SIP MESSAGE request.
- * @param {JsSIP.UA} ua
- */
 (function(JsSIP) {
 var Message;
 
@@ -46,6 +37,8 @@ Message.prototype.send = function(target, body, options) {
   eventHandlers = options.eventHandlers || {};
   contentType = options.contentType || 'text/plain';
 
+  this.content_type = contentType;
+
   // Set event handlers
   for (event in eventHandlers) {
     this.on(event, eventHandlers[event]);
@@ -60,6 +53,9 @@ Message.prototype.send = function(target, body, options) {
 
   if(body) {
     this.request.body = body;
+    this.content = body;
+  } else {
+    this.content = null;
   }
 
   request_sender = new JsSIP.RequestSender(this, this.ua);
@@ -69,9 +65,6 @@ Message.prototype.send = function(target, body, options) {
   request_sender.send();
 };
 
-/**
-* @private
-*/
 Message.prototype.receiveResponse = function(response) {
   var cause;
 
@@ -104,9 +97,6 @@ Message.prototype.receiveResponse = function(response) {
 };
 
 
-/**
-* @private
-*/
 Message.prototype.onRequestTimeout = function() {
   if(this.closed) {
     return;
@@ -117,9 +107,6 @@ Message.prototype.onRequestTimeout = function() {
   });
 };
 
-/**
-* @private
-*/
 Message.prototype.onTransportError = function() {
   if(this.closed) {
     return;
@@ -130,21 +117,22 @@ Message.prototype.onTransportError = function() {
   });
 };
 
-/**
-* @private
-*/
 Message.prototype.close = function() {
   this.closed = true;
   delete this.ua.applicants[this];
 };
 
-/**
- * @private
- */
 Message.prototype.init_incoming = function(request) {
   var transaction;
 
   this.request = request;
+  this.content_type = request.getHeader('Content-Type');
+
+  if (request.body) {
+    this.content = request.body;
+  } else {
+    this.content = null;
+  }
 
   this.newMessage('remote', request);
 
@@ -176,9 +164,6 @@ Message.prototype.accept = function(options) {
 /**
  * Reject the incoming Message
  * Only valid for incoming Messages
- *
- * @param {Number} status_code
- * @param {String} [reason_phrase]
  */
 Message.prototype.reject = function(options) {
   options = options || {};
@@ -204,9 +189,6 @@ Message.prototype.reject = function(options) {
  * Internal Callbacks
  */
 
-/**
- * @private
- */
 Message.prototype.newMessage = function(originator, request) {
   var message = this,
     event_name = 'newMessage';

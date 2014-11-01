@@ -1,7 +1,3 @@
-/**
- * @fileoverview SIP Message
- */
-
 (function(JsSIP) {
 var
   OutgoingRequest,
@@ -10,16 +6,14 @@ var
   IncomingResponse;
 
 /**
- * @augments JsSIP
- * @class Class for outgoing SIP request.
- * @param {String} method request method
- * @param {String} ruri request uri
- * @param {JsSIP.UA} ua
- * @param {Object} params parameters that will have priority over ua.configuration parameters:
+ * -param {String} method request method
+ * -param {String} ruri request uri
+ * -param {JsSIP.UA} ua
+ * -param {Object} params parameters that will have priority over ua.configuration parameters:
  * <br>
  *  - cseq, call_id, from_tag, from_uri, from_display_name, to_uri, to_tag, route_set
- * @param {Object} [headers] extra headers
- * @param {String} [body]
+ * -param {Object} [headers] extra headers
+ * -param {String} [body]
  */
 OutgoingRequest = function(method, ruri, ua, params, extraHeaders, body) {
   var
@@ -93,17 +87,17 @@ OutgoingRequest = function(method, ruri, ua, params, extraHeaders, body) {
 OutgoingRequest.prototype = {
   /**
    * Replace the the given header by the given value.
-   * @param {String} name header name
-   * @param {String | Array} value header value
+   * -param {String} name header name
+   * -param {String | Array} value header value
    */
   setHeader: function(name, value) {
     this.headers[JsSIP.Utils.headerize(name)] = (value instanceof Array) ? value : [value];
   },
-  
+
   /**
    * Get the value of the given header name at the given position.
-   * @param {String} name header name
-   * @returns {String|undefined} Returns the specified header, null if header doesn't exist.
+   * -param {String} name header name
+   * -returns {String|undefined} Returns the specified header, null if header doesn't exist.
    */
   getHeader: function(name) {
     var regexp, idx,
@@ -123,14 +117,14 @@ OutgoingRequest.prototype = {
         }
       }
     }
-    
+
     return;
   },
 
   /**
    * Get the header/s of the given name.
-   * @param {String} name header name
-   * @returns {Array} Array with all the headers of the specified name.
+   * -param {String} name header name
+   * -returns {Array} Array with all the headers of the specified name.
    */
   getHeaders: function(name) {
     var idx, length, regexp,
@@ -158,13 +152,13 @@ OutgoingRequest.prototype = {
 
   /**
    * Verify the existence of the given header.
-   * @param {String} name header name
-   * @returns {boolean} true if header with given name exists, false otherwise
+   * -param {String} name header name
+   * -returns {boolean} true if header with given name exists, false otherwise
    */
   hasHeader: function(name) {
     var regexp, idx,
       length = this.extraHeaders.length;
-    
+
     if (this.headers[JsSIP.Utils.headerize(name)]) {
       return true;
     } else {
@@ -175,12 +169,12 @@ OutgoingRequest.prototype = {
         }
       }
     }
-    
+
     return false;
   },
-  
+
   toString: function() {
-    var msg = '', header, length, idx, 
+    var msg = '', header, length, idx,
       supported = [];
 
     msg += this.method + ' ' + this.ruri + ' SIP/2.0\r\n';
@@ -208,12 +202,12 @@ OutgoingRequest.prototype = {
         }
         break;
     }
-    
+
     supported.push('outbound');
-    
+
     // Allow
     msg += 'Allow: '+ JsSIP.Utils.getAllowedMethods(this.ua) +'\r\n';
-    
+
     msg += 'Supported: ' +  supported +'\r\n';
     msg += 'User-Agent: ' + JsSIP.C.USER_AGENT +'\r\n';
 
@@ -229,10 +223,6 @@ OutgoingRequest.prototype = {
   }
 };
 
-/**
- * @augments JsSIP
- * @class Class for incoming SIP message.
- */
 IncomingMessage = function(){
   this.data = null;
   this.headers = null;
@@ -252,8 +242,6 @@ IncomingMessage.prototype = {
   /**
   * Insert a header of the given name and value into the last position of the
   * header array.
-  * @param {String} name header name
-  * @param {String} value header value
   */
   addHeader: function(name, value) {
     var header = { raw: value };
@@ -269,8 +257,6 @@ IncomingMessage.prototype = {
 
   /**
    * Get the value of the given header name at the given position.
-   * @param {String} name header name
-   * @returns {String|undefined} Returns the specified header, null if header doesn't exist.
    */
   getHeader: function(name) {
     var header = this.headers[JsSIP.Utils.headerize(name)];
@@ -286,8 +272,6 @@ IncomingMessage.prototype = {
 
   /**
    * Get the header/s of the given name.
-   * @param {String} name header name
-   * @returns {Array} Array with all the headers of the specified name.
    */
   getHeaders: function(name) {
     var idx, length,
@@ -308,8 +292,6 @@ IncomingMessage.prototype = {
 
   /**
    * Verify the existence of the given header.
-   * @param {String} name header name
-   * @returns {boolean} true if header with given name exists, false otherwise
    */
   hasHeader: function(name) {
     return(this.headers[JsSIP.Utils.headerize(name)]) ? true : false;
@@ -317,9 +299,9 @@ IncomingMessage.prototype = {
 
   /**
   * Parse the given header on the given index.
-  * @param {String} name header name
-  * @param {Number} [idx=0] header index
-  * @returns {Object|undefined} Parsed header object, undefined if the header is not present or in case of a parsing error.
+  * -param {String} name header name
+  * -param {Number} [idx=0] header index
+  * -returns {Object|undefined} Parsed header object, undefined if the header is not present or in case of a parsing error.
   */
   parseHeader: function(name, idx) {
     var header, value, parsed;
@@ -358,11 +340,11 @@ IncomingMessage.prototype = {
 
   /**
    * Message Header attribute selector. Alias of parseHeader.
-   * @param {String} name header name
-   * @param {Number} [idx=0] header index
-   * @returns {Object|undefined} Parsed header object, undefined if the header is not present or in case of a parsing error.
+   * -param {String} name header name
+   * -param {Number} [idx=0] header index
+   * -returns {Object|undefined} Parsed header object, undefined if the header is not present or in case of a parsing error.
    *
-   * @example
+   * -example
    * message.s('via',3).port
    */
   s: function(name, idx) {
@@ -371,8 +353,8 @@ IncomingMessage.prototype = {
 
   /**
   * Replace the value of the given header by the value.
-  * @param {String} name header name
-  * @param {String} value header value
+  * -param {String} name header name
+  * -param {String} value header value
   */
   setHeader: function(name, value) {
     var header = { raw: value };
@@ -384,10 +366,6 @@ IncomingMessage.prototype = {
   }
 };
 
-/**
- * @augments IncomingMessage
- * @class Class for incoming SIP request.
- */
 IncomingRequest = function(ua) {
   this.logger = ua.getLogger('jssip.sipmessage');
   this.ua = ua;
@@ -400,12 +378,12 @@ IncomingRequest.prototype = new IncomingMessage();
 
 /**
 * Stateful reply.
-* @param {Number} code status code
-* @param {String} reason reason phrase
-* @param {Object} headers extra headers
-* @param {String} body body
-* @param {Function} [onSuccess] onSuccess callback
-* @param {Function} [onFailure] onFailure callback
+* -param {Number} code status code
+* -param {String} reason reason phrase
+* -param {Object} headers extra headers
+* -param {String} body body
+* -param {Function} [onSuccess] onSuccess callback
+* -param {Function} [onFailure] onFailure callback
 */
 IncomingRequest.prototype.reply = function(code, reason, extraHeaders, body, onSuccess, onFailure) {
   var rr, vias, length, idx, response,
@@ -460,7 +438,7 @@ IncomingRequest.prototype.reply = function(code, reason, extraHeaders, body, onS
   for (idx = 0; idx < length; idx++) {
     response += extraHeaders[idx].trim() +'\r\n';
   }
-  
+
   // Supported
   switch (this.method) {
     case JsSIP.C.INVITE:
@@ -469,17 +447,21 @@ IncomingRequest.prototype.reply = function(code, reason, extraHeaders, body, onS
       }
       break;
   }
-  
+
   supported.push('outbound');
-  
+
   // Allow and Accept
   if (this.method === JsSIP.C.OPTIONS) {
     response += 'Allow: '+ JsSIP.Utils.getAllowedMethods(this.ua) +'\r\n';
     response += 'Accept: '+ JsSIP.UA.C.ACCEPTED_BODY_TYPES +'\r\n';
   } else if (code === 405) {
     response += 'Allow: '+ JsSIP.Utils.getAllowedMethods(this.ua) +'\r\n';
+  } else if (code === 415 ) {
+    response += 'Accept: '+ JsSIP.UA.C.ACCEPTED_BODY_TYPES +'\r\n';
   }
   
+  response += 'Supported: ' +  supported +'\r\n';
+
   response += 'Supported: ' +  supported +'\r\n';
 
   if(body) {
@@ -496,8 +478,8 @@ IncomingRequest.prototype.reply = function(code, reason, extraHeaders, body, onS
 
 /**
 * Stateless reply.
-* @param {Number} code status code
-* @param {String} reason reason phrase
+* -param {Number} code status code
+* -param {String} reason reason phrase
 */
 IncomingRequest.prototype.reply_sl = function(code, reason) {
   var to, response,
@@ -541,10 +523,6 @@ IncomingRequest.prototype.reply_sl = function(code, reason) {
 };
 
 
-/**
- * @augments IncomingMessage
- * @class Class for incoming SIP response.
- */
 IncomingResponse = function(ua) {
   this.logger = ua.getLogger('jssip.sipmessage');
   this.headers = {};

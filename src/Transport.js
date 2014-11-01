@@ -1,13 +1,3 @@
-/**
- * @fileoverview Transport
- */
-
-/**
- * @augments JsSIP
- * @class Transport
- * @param {JsSIP.UA} ua
- * @param {Object} server ws_server Object
- */
 (function(JsSIP) {
 var Transport,
   C = {
@@ -28,25 +18,18 @@ Transport = function(ua, server) {
   this.connected = false;
   this.reconnectTimer = null;
   this.lastTransportError = {};
-
-  this.ua.transport = this;
-
-  // Connect
-  this.connect();
 };
 
 Transport.prototype = {
   /**
    * Send a message.
-   * @param {JsSIP.OutgoingRequest|String} msg
-   * @returns {Boolean}
    */
   send: function(msg) {
     var message = msg.toString();
 
     if(this.ws && this.ws.readyState === WebSocket.OPEN) {
       if (this.ua.configuration.trace_sip === true) {
-        this.logger.log('sending WebSocket message:\n\n' + message + '\n');
+        this.logger.debug('sending WebSocket message:\n\n' + message + '\n');
       }
       this.ws.send(message);
       return true;
@@ -63,12 +46,14 @@ Transport.prototype = {
     if(this.ws) {
       // Clear reconnectTimer
       window.clearTimeout(this.reconnectTimer);
-      
+      // TODO: should make this.reconnectTimer = null here?
+
       this.closed = true;
-      this.logger.log('closing WebSocket ' + this.server.ws_uri);
+      this.logger.debug('closing WebSocket ' + this.server.ws_uri);
       this.ws.close();
     }
 
+    // TODO: Why this??
     if (this.reconnectTimer !== null) {
       window.clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
@@ -101,7 +86,7 @@ Transport.prototype = {
 
     try {
       this.ws = new WebSocket(this.server.ws_uri, 'sip');
-      
+
       this.ws.binaryType = 'arraybuffer';
 
       this.ws.onopen = function() {
@@ -129,14 +114,10 @@ Transport.prototype = {
 
   // Transport Event Handlers
 
-  /**
-  * @event
-  * @param {event} e
-  */
   onOpen: function() {
     this.connected = true;
 
-    this.logger.log('WebSocket ' + this.server.ws_uri + ' connected');
+    this.logger.debug('WebSocket ' + this.server.ws_uri + ' connected');
     // Clear reconnectTimer since we are not disconnected
     if (this.reconnectTimer !== null) {
       window.clearTimeout(this.reconnectTimer);
@@ -150,17 +131,13 @@ Transport.prototype = {
     this.ua.onTransportConnected(this);
   },
 
-  /**
-  * @event
-  * @param {event} e
-  */
   onClose: function(e) {
     var connected_before = this.connected;
 
     this.connected = false;
     this.lastTransportError.code = e.code;
     this.lastTransportError.reason = e.reason;
-    this.logger.log('WebSocket disconnected (code: ' + e.code + (e.reason? '| reason: ' + e.reason : '') +')');
+    this.logger.debug('WebSocket disconnected (code: ' + e.code + (e.reason? '| reason: ' + e.reason : '') +')');
 
     if(e.wasClean === false) {
       this.logger.warn('WebSocket abrupt disconnection');
@@ -180,15 +157,11 @@ Transport.prototype = {
       }
     } else {
       // This is the first connection attempt
-      //Network error
+      // May be a network error (or may be UA.stop() was called)
       this.ua.onTransportError(this);
     }
   },
 
-  /**
-  * @event
-  * @param {event} e
-  */
   onMessage: function(e) {
     var message, transaction,
       data = e.data;
@@ -196,7 +169,7 @@ Transport.prototype = {
     // CRLF Keep Alive response from server. Ignore it.
     if(data === '\r\n') {
       if (this.ua.configuration.trace_sip === true) {
-        this.logger.log('received WebSocket message with CRLF Keep Alive response');
+        this.logger.debug('received WebSocket message with CRLF Keep Alive response');
       }
       return;
     }
@@ -211,14 +184,14 @@ Transport.prototype = {
       }
 
       if (this.ua.configuration.trace_sip === true) {
-        this.logger.log('received WebSocket binary message:\n\n' + data + '\n');
+        this.logger.debug('received WebSocket binary message:\n\n' + data + '\n');
       }
     }
 
     // WebSocket text message.
     else {
       if (this.ua.configuration.trace_sip === true) {
-        this.logger.log('received WebSocket text message:\n\n' + data + '\n');
+        this.logger.debug('received WebSocket text message:\n\n' + data + '\n');
       }
     }
 
@@ -233,47 +206,44 @@ Transport.prototype = {
     }
 
     // Do some sanity check
-    if(JsSIP.sanityCheck(message, this.ua, this)) {
-      if(message instanceof JsSIP.IncomingRequest) {
-        message.transport = this;
-        this.ua.receiveRequest(message);
-      } else if(message instanceof JsSIP.IncomingResponse) {
-        /* Unike stated in 18.1.2, if a response does not match
-        * any transaction, it is discarded here and no passed to the core
-        * in order to be discarded there.
-        */
-        switch(message.method) {
-          case JsSIP.C.INVITE:
-            transaction = this.ua.transactions.ict[message.via_branch];
-            if(transaction) {
-              transaction.receiveResponse(message);
-            }
-            break;
-          case JsSIP.C.ACK:
-            // Just in case ;-)
-            break;
-          default:
-            transaction = this.ua.transactions.nict[message.via_branch];
-            if(transaction) {
-              transaction.receiveResponse(message);
-            }
-            break;
-        }
+    if(! JsSIP.sanityCheck(message, this.ua, this)) {
+      return;
+    }
+
+    if(message instanceof JsSIP.IncomingRequest) {
+      message.transport = this;
+      this.ua.receiveRequest(message);
+    } else if(message instanceof JsSIP.IncomingResponse) {
+      /* Unike stated in 18.1.2, if a response does not match
+      * any transaction, it is discarded here and no passed to the core
+      * in order to be discarded there.
+      */
+      switch(message.method) {
+        case JsSIP.C.INVITE:
+          transaction = this.ua.transactions.ict[message.via_branch];
+          if(transaction) {
+            transaction.receiveResponse(message);
+          }
+          break;
+        case JsSIP.C.ACK:
+          // Just in case ;-)
+          break;
+        default:
+          transaction = this.ua.transactions.nict[message.via_branch];
+          if(transaction) {
+            transaction.receiveResponse(message);
+          }
+          break;
       }
     }
   },
 
-  /**
-  * @event
-  * @param {event} e
-  */
   onError: function(e) {
     this.logger.warn('WebSocket connection error: ' + e);
   },
 
   /**
   * Reconnection attempt logic.
-  * @private
   */
   reConnect: function() {
     var transport = this;

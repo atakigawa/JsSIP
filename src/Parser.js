@@ -1,11 +1,5 @@
 /**
- * @fileoverview SIP Message Parser
- */
-
-/**
  * Extract and parse every header of a SIP message.
- * @augments JsSIP
- * @namespace
  */
 (function(JsSIP) {
 var Parser;
@@ -117,7 +111,7 @@ function parseHeader(message, data, headerStart, headerEnd) {
       for (idx = 0; idx < length; idx++) {
         header = parsed[idx];
         message.addHeader('contact', headerValue.substring(header.possition, header.offset));
-        message.headers['Contact'][message.getHeaders('contact').length - 1].parsed = header.parsed;
+        message.headers.Contact[message.getHeaders('contact').length - 1].parsed = header.parsed;
       }
       break;
     case 'content-length':
@@ -167,11 +161,8 @@ function parseHeader(message, data, headerStart, headerEnd) {
   }
 }
 
-/** Parse SIP Message
- * @function
- * @param {String} message SIP message.
- * @param {Object} logger object.
- * @returns {JsSIP.IncomingRequest|JsSIP.IncomingResponse|undefined}
+/**
+ * Parse SIP Message
  */
 Parser = {};
 Parser.parseMessage = function(data, ua) {

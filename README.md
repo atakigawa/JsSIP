@@ -1,6 +1,6 @@
-<a href="http://jssip.net"><img src="http://jssip.net/images/jssip-banner.png"/></a>
+<p align="center"><a href="http://jssip.net"><img src="http://jssip.net/images/jssip-banner-new.png"/></a></p>
 
-[![Build Status](https://travis-ci.org/versatica/JsSIP.png?branch=master)](https://travis-ci.org/versatica/JsSIP)
+[![Build Status](https://travis-ci.org/versatica/JsSIP.png?branch=new-design)](https://travis-ci.org/versatica/JsSIP)
 
 ## Overview
 
@@ -9,7 +9,7 @@
 * Lightweight! (~140KB)
 * Easy to use and powerful user API
 * Works with OverSIP, Kamailio, Asterisk and repro (reSIProcate) servers ([more info](http://jssip.net/documentation/misc/interoperability))
-* Written by the authors of [draft-ietf-sipcore-sip-websocket](http://tools.ietf.org/html/draft-ietf-sipcore-sip-websocket) and [OverSIP](http://www.oversip.net)
+* Written by the authors of [RFC 7118 "The WebSocket Protocol as a Transport for SIP"](http://tools.ietf.org/html/rfc7118) and [OverSIP](http://oversip.net)
 
 
 ## Getting Started
@@ -47,10 +47,10 @@ var eventHandlers = {
   'ended': function(e){
     console.log('call ended with cause: '+ e.data.cause);
   },
-  'started': function(e){
+  'confirmed': function(e){
     var rtcSession = e.sender;
 
-    console.log('call started');
+    console.log('call confirmed');
 
     // Attach local stream to selfView
     if (rtcSession.getLocalStreams().length > 0) {
@@ -95,17 +95,17 @@ Check our **Tryit JsSIP** online demo:
 
 ## Authors
 
-### José Luis Millán
+#### José Luis Millán
 
 * Main author. Core Designer and Developer.
 * <jmillan@aliax.net> (Github [@jmillan](https://github.com/jmillan))
 
-### Iñaki Baz Castillo
+#### Iñaki Baz Castillo
 
 * Core Designer and Developer.
 * <ibc@aliax.net> (Github [@ibc](https://github.com/ibc))
 
-### Saúl Ibarra Corretgé
+#### Saúl Ibarra Corretgé
 
 * Core Designer.
 * <saghul@gmail.com> (Github [@saghul](https://github.com/saghul))
