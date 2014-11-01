@@ -963,13 +963,13 @@ UA.configuration_skeleton = (function() {
     "connection_recovery_max_interval",
     "connection_recovery_min_interval",
     "display_name",
-    "hack_via_tcp", // false.
+    "hack_via_tcp", // false
     "hack_via_ws", // false
     "hack_ip_in_contact", //false
     "instance_id",
-    "no_answer_timeout", // 30 seconds.
+    "no_answer_timeout", // 30 seconds
     "password",
-    "register_expires", // 600 seconds.
+    "register_expires", // 600 seconds
     "registrar_server",
     "stun_servers",
     "trace_sip",

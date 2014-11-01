@@ -306,7 +306,7 @@ RTCSession.prototype.answer = function(options) {
     // User media succeeded
     userMediaSucceeded = function(stream) {
       if (mediaStreamProcessFunc) {
-          stream = mediaStreamProcessFunc(stream);
+        stream = mediaStreamProcessFunc(stream);
       }
       self.rtcMediaHandler.addStream(
         stream,
@@ -1129,10 +1129,10 @@ RTCSession.prototype.connect = function(target, options) {
   this.newRTCSession('local', this.request);
 
   this.sendInitialRequest(
-      mediaConstraints,
-      RTCOfferConstraints,
-      mediaStream,
-      options
+    mediaConstraints,
+    RTCOfferConstraints,
+    mediaStream,
+    options
   );
 };
 
@@ -1526,7 +1526,7 @@ RTCSession.prototype.sendInitialRequest = function(mediaConstraints, RTCOfferCon
  // User media succeeded
  userMediaSucceeded = function(stream) {
    if (mediaStreamProcessFunc) {
-       stream = mediaStreamProcessFunc(stream);
+     stream = mediaStreamProcessFunc(stream);
    }
    self.rtcMediaHandler.addStream(
      stream,
