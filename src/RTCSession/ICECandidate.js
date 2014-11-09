@@ -1,11 +1,3 @@
-/**
- * @fileoverview ICECandidate
- */
-
-/**
- * @class ICECandidate
- * @param {JsSIP.RTCSession} session
- */
 (function(JsSIP) {
 
 var ICECandidate,
